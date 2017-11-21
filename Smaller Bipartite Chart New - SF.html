@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+text{
+	font-size:13px;
+}
+.mainBars rect{
+  shape-rendering: auto;
+  fill-opacity: 0;
+  stroke-width: 0.5px;
+  stroke: rgb(0, 0, 0);
+  stroke-opacity: 0;
+}
+.subBars{
+	shape-rendering:crispEdges;
+}
+.edges{
+	stroke:none;
+	fill-opacity:0.5;
+}
+.header{
+	text-anchor:middle;
+	font-size:16px;
+}
+line{
+	stroke:grey;
+}
+img {
+    position: relative;
+  /*top: 100; bottom:50; left: 600; right:800;*/
+		float:right;
+    margin: auto;
+		height: auto;
+    width: auto;
+    max-width: 108px;
+    max-height: 54px;
+}
+
+body { font: 13px Lato;}
+h1 { font: 24px Lato;}
+.axis path,
+.axis line {
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+}
+
+.axis text {
+	font-family: sans-serif;
+	font-size: 12px;
+}
+
+</style>
+<html>
+  <head>
+    <h1 style="font-family:Lato;">Commuting Flows in the Bay Area</h1>
+<p style="font-family:Lato;color:black;font-size:15px;"><strong>Tips for navigating this graphic:</strong></br>
+	Where workers live is on the left, and where workers work is on the right.</br>
+  Mouse over a jurisdiction on the left to see the breakdown of where residents of that jurisdiction work.</br>
+	Mouse over a jurisdiction on the right to see the breakdown of where workers in that jurisdiction live.</p>
+    </head>
+<body>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="http://vizjs.org/viz.v1.1.0.min.js"></script>
+<script>
+
+var data=[
+	  ["Alameda County","Alameda County",456769],
+	  ["Alameda County","Contra Costa County",39013],
+	  ["Alameda County","Marin County",4110],
+	  ["Alameda County","San Francisco County",77559],
+	  ["Alameda County","San Mateo County",34448],
+	  ["Contra Costa County","Alameda County",94503],
+	  ["Contra Costa County","Contra Costa County",280224],
+	  ["Contra Costa County","Marin County",7966],
+	  ["Contra Costa County","San Francisco County",52206],
+	  ["Contra Costa County","San Mateo County",10509],
+	  ["Marin County","Alameda County",4165],
+	  ["Marin County","Contra Costa County",2183],
+	  ["Marin County","Marin County",79676],
+	  ["Marin County","San Francisco County",25237],
+	  ["Marin County","San Mateo County",2161],
+	  ["San Francisco County","Alameda County",21914],
+	  ["San Francisco County","Contra Costa County",4055],
+	  ["San Francisco County","Marin County",6883],
+	  ["San Francisco County","San Francisco County",340735],
+	  ["San Francisco County","San Mateo County",45216],
+	  ["San Mateo County","Alameda County",12677],
+	  ["San Mateo County","Contra Costa County",1611],
+	  ["San Mateo County","Marin County",923],
+	  ["San Mateo County","San Francisco County",78720],
+	  ["San Mateo County","San Mateo County",211700],
+	  ["Alameda County","San Benito County",105],
+	  ["Alameda County","Santa Clara County",68380],
+	  ["Contra Costa County","Santa Clara County",12870],
+	  ["Marin County","Santa Clara County",986],
+	  ["San Francisco County","Santa Clara County",22423],
+	  ["San Mateo County","Santa Clara County",52988],
+	  ["San Benito County","San Benito County",11644],
+	  ["San Benito County","Santa Clara County",8415],
+	  ["Santa Clara County","San Benito County",1347],
+	  ["Santa Clara County","Santa Clara County",732765],
+	  ["San Benito County","Alameda County",169],
+	  ["San Benito County","San Mateo County",132],
+	  ["Santa Clara County","Alameda County",37049],
+	  ["Santa Clara County","Contra Costa County",3517],
+	  ["Santa Clara County","Marin County",508],
+	  ["Santa Clara County","San Francisco County",11245],
+	  ["Santa Clara County","San Mateo County",43128]
+];
+
+var color ={"Alameda County":"#440154", "Contra Costa County":"#433880",  "Marin County":"#31678d",
+"San Benito County":"#21918d", "San Francisco County":"#3cb875", "San Mateo County":"#97d73e", "Santa Clara County":"#e1e329"};
+var svg = d3.select("body").append("svg").attr("width", 800).attr("height", 500);
+
+svg.append("text").attr("x",350).attr("y",70)
+	.attr("class","header").text("Residence to Workplace Commute Flow");
+
+
+var g =[svg.append("g").attr("transform","translate(200,100)")
+		,svg.append("g").attr("transform","translate(500,100)")];
+
+var bp=[ viz.bP()
+		.data(data)
+		.min(12)
+		.pad(1)
+		.height(400)
+		.width(300)
+		.barSize(35)
+		.fill(d=>color[d.primary])
+];
+
+[0,1].forEach(function(i){
+	g[i].call(bp[i])
+
+	g[i].append("text").attr("x",-50).attr("y",-8).style("text-anchor","middle").text("Residence");
+	g[i].append("text").attr("x", 350).attr("y",-8).style("text-anchor","middle").text("Workplace");
+
+	g[i].append("line").attr("x1",-100).attr("x2",0);
+	g[i].append("line").attr("x1",300).attr("x2",400);
+
+	/*g[i].append("line").attr("y1",610).attr("y2",610).attr("x1",-100).attr("x2",0);*/
+	/*g[i].append("line").attr("y1",610).attr("y2",610).attr("x1",500).attr("x2",600);*/
+
+	g[i].selectAll(".mainBars")
+		.on("mouseover",mouseover)
+		.on("mouseout",mouseout);
+
+	g[i].selectAll(".mainBars").append("text").attr("class","label")
+		.attr("x",d=>(d.part=="primary"? -30: 30))
+		.attr("y",d=>+6)
+		.text(d=>d.key)
+		.attr("text-anchor",d=>(d.part=="primary"? "end": "start"));
+
+	g[i].selectAll(".mainBars").append("text").attr("class","perc")
+		.attr("x",d=>(d.part=="primary"? -190: 190))
+		.attr("y",d=>+6)
+		.text(function(d){ return d3.format("0.0%")(d.percent)})
+		.attr("text-anchor",d=>(d.part=="primary"? "end": "start"));
+});
+
+
+
+
+function mouseover(d){
+	[0,1].forEach(function(i){
+		bp[i].mouseover(d);
+
+		g[i].selectAll(".mainBars").select(".perc")
+		.text(function(d){ return d3.format("0.0%")(d.percent)});
+	});
+}
+function mouseout(d){
+	[0,1].forEach(function(i){
+		bp[i].mouseout(d);
+
+		g[i].selectAll(".mainBars").select(".perc")
+		.text(function(d){ return d3.format("0.0%")(d.percent)});
+	});
+}
+d3.select(self.frameElement).style("height", "800px");
+</script>
+<p>Source: American Community Survey, 2009-2013 Estimates</p>
+<p>Graphic by Simone Roy </p>
+
+
+
+</body>
+</html>
